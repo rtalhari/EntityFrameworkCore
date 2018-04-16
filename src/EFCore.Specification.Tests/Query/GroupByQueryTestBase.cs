@@ -1307,6 +1307,15 @@ namespace Microsoft.EntityFrameworkCore.Query
             public override int GetHashCode() => Order.GetHashCode();
         }
 
+        [ConditionalFact]
+        public virtual void GroupBy_Where_in_aggregate()
+        {
+            AssertQueryScalar<Order>(
+                os => from o in os
+                      group o by new { o.CustomerID } into g
+                      select g.Where(e => e.OrderID < 10300).Count());
+        }
+
         #endregion
 
         #region GroupByWithoutAggregate
@@ -1580,8 +1589,6 @@ namespace Microsoft.EntityFrameworkCore.Query
                 elementSorter: GroupingSorter<string, object>(),
                 elementAsserter: GroupingAsserter<string, dynamic>(d => d.EmployeeID));
         }
-
-
 
         [ConditionalFact]
         public virtual void GroupBy_with_aggregate_through_navigation_property()

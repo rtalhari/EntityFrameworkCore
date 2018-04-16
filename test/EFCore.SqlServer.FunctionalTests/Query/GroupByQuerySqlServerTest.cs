@@ -1050,29 +1050,34 @@ ORDER BY [o].[CustomerID]");
         {
             base.GroupBy_Aggregate_Join_inverse();
 
-            AssertContainsSql(
-                @"SELECT [o1].[OrderID], [o1].[CustomerID], [o1].[EmployeeID], [o1].[OrderDate]
-FROM [Orders] AS [o1]",
-                //
+            // This could be lifted. Blocked by bug #10812
+            AssertSql(
                 @"SELECT [o0].[OrderID], [o0].[CustomerID], [o0].[EmployeeID], [o0].[OrderDate]
-FROM [Orders] AS [o0]
-ORDER BY [o0].[CustomerID]",
+FROM [Orders] AS [o0]",
                 //
-                @"SELECT [c].[CustomerID], [c].[Address], [c].[City], [c].[CompanyName], [c].[ContactName], [c].[ContactTitle], [c].[Country], [c].[Fax], [c].[Phone], [c].[PostalCode], [c].[Region]
-FROM [Customers] AS [c]");
+                @"SELECT [c].[CustomerID], [c].[Address], [c].[City], [c].[CompanyName], [c].[ContactName], [c].[ContactTitle], [c].[Country], [c].[Fax], [c].[Phone], [c].[PostalCode], [c].[Region], [t].[CustomerID], [t].[LastOrderID]
+FROM [Customers] AS [c]
+INNER JOIN (
+    SELECT [o].[CustomerID], MAX([o].[OrderID]) AS [LastOrderID]
+    FROM [Orders] AS [o]
+    GROUP BY [o].[CustomerID]
+    HAVING COUNT(*) > 5
+) AS [t] ON [c].[CustomerID] = [t].[CustomerID]");
         }
 
         public override void GroupBy_Aggregate_Join_inverse2()
         {
             base.GroupBy_Aggregate_Join_inverse2();
 
-            AssertContainsSql(
-                @"SELECT [o0].[OrderID], [o0].[CustomerID], [o0].[EmployeeID], [o0].[OrderDate]
-FROM [Orders] AS [o0]
-ORDER BY [o0].[CustomerID]",
-                //
-                @"SELECT [c].[CustomerID], [c].[Address], [c].[City], [c].[CompanyName], [c].[ContactName], [c].[ContactTitle], [c].[Country], [c].[Fax], [c].[Phone], [c].[PostalCode], [c].[Region]
-FROM [Customers] AS [c]");
+            AssertSql(
+                @"SELECT [c].[CustomerID], [c].[Address], [c].[City], [c].[CompanyName], [c].[ContactName], [c].[ContactTitle], [c].[Country], [c].[Fax], [c].[Phone], [c].[PostalCode], [c].[Region], [t].[CustomerID], [t].[LastOrderID]
+FROM [Customers] AS [c]
+INNER JOIN (
+    SELECT [o].[CustomerID], MAX([o].[OrderID]) AS [LastOrderID]
+    FROM [Orders] AS [o]
+    GROUP BY [o].[CustomerID]
+    HAVING COUNT(*) > 5
+) AS [t] ON [c].[CustomerID] = [t].[CustomerID]");
         }
 
         public override void GroupBy_with_result_selector()
@@ -1161,6 +1166,16 @@ ORDER BY [o1].[OrderID]");
 
             AssertSql(
                 @"SELECT [o].[OrderID] AS [Order], [o].[CustomerID] AS [Customer]
+FROM [Orders] AS [o]
+ORDER BY [o].[CustomerID]");
+        }
+
+        public override void GroupBy_Where_in_aggregate()
+        {
+            base.GroupBy_Where_in_aggregate();
+
+            AssertSql(
+                @"SELECT [o].[OrderID], [o].[CustomerID], [o].[EmployeeID], [o].[OrderDate]
 FROM [Orders] AS [o]
 ORDER BY [o].[CustomerID]");
         }

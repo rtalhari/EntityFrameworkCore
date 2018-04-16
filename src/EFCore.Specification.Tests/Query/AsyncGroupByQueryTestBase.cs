@@ -1302,6 +1302,15 @@ namespace Microsoft.EntityFrameworkCore.Query
             public override int GetHashCode() => Order.GetHashCode();
         }
 
+        [ConditionalFact]
+        public virtual async Task GroupBy_Where_in_aggregate()
+        {
+            await AssertQueryScalar<Order>(
+                os => from o in os
+                      group o by new { o.CustomerID } into g
+                      select g.Where(e => e.OrderID < 10300).Count());
+        }
+
         #endregion
 
         #region GroupByWithoutAggregate
